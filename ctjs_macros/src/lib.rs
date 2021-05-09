@@ -2,8 +2,8 @@ extern crate proc_macro;
 
 mod parser;
 
-use proc_macro::{Span, TokenStream as TokenStream1};
-use proc_macro2::{Literal, TokenStream};
+use proc_macro::TokenStream as TokenStream1;
+use proc_macro2::TokenStream;
 use quick_js::{Context, JsValue};
 use quote::quote;
 use std::str::FromStr;

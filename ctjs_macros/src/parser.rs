@@ -28,8 +28,13 @@ fn add(code: &mut String, input: TokenStream) {
                 if inner.spacing() == Spacing::Alone
                     && !code.ends_with(" ")
                     && inner.as_char() != '('
+                    && inner.as_char() != '>'
                 {
                     code.push_str(" ");
+                }
+
+                if inner.as_char() == '>' && code.ends_with("= ") {
+                    code.pop();
                 }
 
                 if inner.as_char() == '#' && inner.spacing() == Spacing::Joint {
