@@ -15,7 +15,12 @@ fn eval_impl(input: TokenStream) -> Result<TokenStream, TokenStream> {
 
     // panic!("JS to execute: {}", js);
 
-    let output = context.eval(&js).expect("eval_as string");
+    let output = match context.eval(&js) {
+        Ok(value) => value,
+        Err(err) => {
+            panic!("Error when evaluating code: {}\nSource:\n{}", err, js);
+        }
+    };
 
     match output {
         JsValue::Undefined | JsValue::Null => Ok(quote! { () }),
