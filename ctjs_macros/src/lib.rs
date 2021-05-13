@@ -8,12 +8,21 @@ use quick_js::{Context, JsValue};
 use quote::quote;
 use std::str::FromStr;
 
+static RUNTIME: &str = include_str!("../runtime.js");
+
 fn eval_impl(input: TokenStream) -> Result<TokenStream, TokenStream> {
     let context = Context::new().unwrap();
 
     let js = parser::parse_to_js(input.clone());
 
     // panic!("JS to execute: {}", js);
+
+    if let Err(err) = context.eval(RUNTIME) {
+        panic!(
+            "ctjs error evaluating runtime. Report this as a bug. Error: {:?}",
+            err
+        );
+    }
 
     let output = match context.eval(&js) {
         Ok(value) => value,
