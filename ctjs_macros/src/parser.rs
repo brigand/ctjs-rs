@@ -44,6 +44,24 @@ fn add(code: &mut String, input: TokenStream) {
         let is_first = first.take().is_some() && code.is_empty();
 
         if is_first {
+            if let TokenTree::Ident(ident) = &token {
+                if ident.to_string().as_str() == "concat" {
+                    matches!(tokens.next(), Some(TokenTree::Punct(_)));
+                    if let Some(TokenTree::Group(group)) = tokens.next() {
+                        for token in group.stream() {
+                            if let TokenTree::Literal(lit) = &token {
+                                if let Some(js) = parse_raw_literal(lit) {
+                                    write!(code, "{}\n", js).unwrap();
+                                }
+                            }
+                        }
+
+                        let _ = tokens.next();
+
+                        return;
+                    }
+                }
+            }
             if let TokenTree::Literal(lit) = &token {
                 if let Some(js) = parse_raw_literal(lit) {
                     write!(code, "{}", js).unwrap();

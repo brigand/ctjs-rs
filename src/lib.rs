@@ -1,8 +1,8 @@
 pub use ctjs_macros::*;
-
 #[cfg(test)]
 mod tests {
     use ctjs_macros::eval;
+    use ctjs_macros::JsMacro;
 
     #[test]
     fn it_works() {
@@ -44,5 +44,30 @@ mod tests {
         println!("Nums: {:#?}", nums);
 
         assert_eq!("making test fail to see stdout", "");
+    }
+
+    #[test]
+    fn it_handles_multiple_strings() {
+        let foo: u8 = eval! {
+            concat!(
+            r#" let x = 42; "#,
+            r#" x + '_u8'  "#
+            )
+        };
+        assert_eq!(foo, 42);
+    }
+
+    #[test]
+    fn it_can_derive_simple() {
+        #[derive(Debug, JsMacro)]
+        #[js_macro = "simple"]
+        struct TestStruct {
+            pub s: String,
+        }
+
+        simple! {
+        r#"`static NAME: &str = "${struct_name}";`"# }
+
+        assert_eq!(NAME, "TestStruct");
     }
 }
