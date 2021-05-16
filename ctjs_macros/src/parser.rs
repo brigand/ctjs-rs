@@ -1,5 +1,6 @@
 use proc_macro2::{Delimiter, Literal, Spacing, TokenStream, TokenTree};
 use std::fmt::Write;
+use syn::{token::Token, LitStr};
 
 pub fn parse_to_js(input: TokenStream) -> String {
     let mut code = String::new();
@@ -8,30 +9,40 @@ pub fn parse_to_js(input: TokenStream) -> String {
 }
 
 fn parse_raw_literal(lit: &Literal) -> Option<String> {
-    let lit = lit.to_string();
+    let tt: TokenTree = lit.clone().into();
+    let ts: TokenStream = tt.into();
+    let lit: LitStr = syn::parse2(ts).expect("parse_raw_literal");
+    let lit = lit.value();
 
-    let mut chars = lit.chars();
-    if chars.next()? != 'r' {
-        return None;
-    }
+    return Some(lit);
 
-    let mut hashes = 0;
+    // let mut chars = lit.chars();
 
-    while let Some(ch) = chars.next() {
-        if ch == '#' {
-            hashes += 1;
-        } else if ch == '"' {
-            break;
-        } else {
-            unreachable!("Unexpected character in raw literal before quote: {:?}", ch)
-        }
-    }
+    // let (prefix_len, suffix_len) = match chars.next()? {
+    //     '"' => ('"'.len_utf8(), '"'.len_utf8()),
+    //     'r' => {
+    //         let mut hashes = 0;
 
-    let prefix_len = 'r'.len_utf8() + hashes + '"'.len_utf8();
-    let suffix_len = hashes + '"'.len_utf8();
+    //         while let Some(ch) = chars.next() {
+    //             if ch == '#' {
+    //                 hashes += 1;
+    //             } else if ch == '"' {
+    //                 break;
+    //             } else {
+    //                 unreachable!("Unexpected character in raw literal before quote: {:?}", ch)
+    //             }
+    //         }
 
-    let contents = &lit[prefix_len..lit.len() - suffix_len];
-    Some(contents.trim().to_owned())
+    //         (
+    //             'r'.len_utf8() + hashes + '"'.len_utf8(),
+    //             hashes + '"'.len_utf8(),
+    //         )
+    //     }
+    //     _ => return None,
+    // };
+
+    // let contents = &lit[prefix_len..lit.len() - suffix_len];
+    // Some(contents.trim().to_owned())
 }
 
 // Based on https://github.com/fusion-engineering/inline-python/blob/7604f78b2c834f5f5ee77defecb5a1a8824fac9d/macros/src/embed_python.rs
@@ -46,20 +57,36 @@ fn add(code: &mut String, input: TokenStream) {
         if is_first {
             if let TokenTree::Ident(ident) = &token {
                 if ident.to_string().as_str() == "concat" {
-                    matches!(tokens.next(), Some(TokenTree::Punct(_)));
-                    if let Some(TokenTree::Group(group)) = tokens.next() {
-                        for token in group.stream() {
-                            if let TokenTree::Literal(lit) = &token {
-                                if let Some(js) = parse_raw_literal(lit) {
+                    let punct = matches!(tokens.next(), Some(TokenTree::Punct(_)));
+
+                    fn handle_token(code: &mut String, token: TokenTree) {
+                        match token {
+                            TokenTree::Group(group) => {
+                                for token in group.stream() {
+                                    handle_token(code, token);
+                                }
+                            }
+                            TokenTree::Literal(lit) => {
+                                if let Some(js) = parse_raw_literal(&lit) {
                                     write!(code, "{}\n", js).unwrap();
                                 }
                             }
+                            TokenTree::Punct(_) => {}
+                            _ => {
+                                panic!(
+                                    "Unexpected token in ctjs::eval!(concat!(HERE)). Token: {:?}",
+                                    token
+                                );
+                            }
                         }
-
-                        let _ = tokens.next();
-
-                        return;
                     }
+
+                    if let Some(token) = tokens.next() {
+                        // panic!("Group: {:#?}", group.stream());
+                        handle_token(code, token);
+                    }
+                    let _ = tokens.next();
+                    return;
                 }
             }
             if let TokenTree::Literal(lit) = &token {

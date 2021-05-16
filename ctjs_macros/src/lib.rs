@@ -39,7 +39,10 @@ fn eval_impl(input: TokenStream) -> Result<TokenStream, TokenStream> {
         JsValue::Int(i) => Ok(quote! { #i }),
         JsValue::Float(f) => Ok(quote! { #f }),
         JsValue::String(rust_code) => {
-            TokenStream::from_str(&rust_code).map_err(|_| TokenStream::new())
+            match TokenStream::from_str(&rust_code) {
+                Ok(ts) => Ok(ts),
+                Err(err) => panic!("Expected this string to be valid when interpreted as a TokenStream: {:?}\nParse error: {:?}", rust_code, err)
+            }
         }
         JsValue::Array(_) => {
             panic!("ctjs evaluation resulted in an Array, which doesn't map cleanly to Rust types. Try returning a string of rust code, or a bool or number");
@@ -47,7 +50,7 @@ fn eval_impl(input: TokenStream) -> Result<TokenStream, TokenStream> {
         JsValue::Object(_) => {
             panic!("ctjs evaluation resulted in an Object, which doesn't map cleanly to Rust types. Try returning a string of rust code, or a bool or number");
         }
-        JsValue::__NonExhaustive => {
+        _ => {
             unreachable!()
         }
     }
@@ -90,10 +93,13 @@ fn derive_js_macro_impl(input: DeriveInput) -> Result<TokenStream, TokenStream> 
     // passed to #macro_name
     // let (data_kind, data_value) = match input.data {};
 
-    let code = format!("let struct_name = \"{}\";", ident);
-    // panic!("code: {}", code);
-    let code_token = syn::Lit::Str(syn::LitStr::new(&code, Span::mixed_site()));
+    let code = format!(r#"let struct_name = "{}";"#, ident);
+    let code_token = syn::Lit::Str(syn::LitStr::new(&code, Span::call_site()));
 
+    // let ident = syn::Ident::new("NAME", Span::call_site());
+    // return Ok(quote! {
+    //     static #ident: &str = #code_token;
+    // });
     Ok(quote! {
         macro_rules! #macro_name_token {
             ($js:literal) => {

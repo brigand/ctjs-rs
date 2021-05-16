@@ -1,4 +1,5 @@
 pub use ctjs_macros::*;
+
 #[cfg(test)]
 mod tests {
     use ctjs_macros::eval;
@@ -65,9 +66,20 @@ mod tests {
             pub s: String,
         }
 
-        simple! {
-        r#"`static NAME: &str = "${struct_name}";`"# }
+        simple! { r#"`static NAME: &str = "${struct_name}";`"# }
 
         assert_eq!(NAME, "TestStruct");
     }
+}
+
+fn example_test() {
+    #[derive(Debug, JsMacro)]
+    #[js_macro = "example"]
+    struct TestStruct {
+        pub s: String,
+    }
+
+    example! { r#"`static NAME: &str = "${struct_name}";`"# }
+
+    // assert_eq!(NAME, "TestStruct");
 }
