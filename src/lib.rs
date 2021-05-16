@@ -66,7 +66,7 @@ mod tests {
             pub s: String,
         }
 
-        simple! { r#"`static NAME: &str = "${struct_name}";`"# }
+        simple! { js!("static NAME: &str = " + ctjs.str(name) + ";") }
 
         assert_eq!(NAME, "TestStruct");
     }
@@ -79,7 +79,7 @@ fn example_test() {
         pub s: String,
     }
 
-    example! { r#"`static NAME: &str = "${struct_name}";`"# }
+    example! { js!("static NAME: &str = " + ctjs.str(name) + ";") }
 
     // assert_eq!(NAME, "TestStruct");
 }

@@ -1,6 +1,7 @@
 extern crate proc_macro;
 
 mod parser;
+mod rs_to_json;
 
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Span, TokenStream};
@@ -57,6 +58,11 @@ fn eval_impl(input: TokenStream) -> Result<TokenStream, TokenStream> {
 }
 
 fn derive_js_macro_impl(input: DeriveInput) -> Result<TokenStream, TokenStream> {
+    // TODO: convert visibility, ident, and input.data to json and generate a JS program
+    // that stores it in a global variable. Then have a macro concat that with the JS code
+    // passed to #macro_name
+    // let (data_kind, data_value) = match input.data {};
+
     let macro_name = input.attrs.iter().find_map(|attr| {
         // panic!("Path: {:?}", attr.path);
         if !attr.path.is_ident("js_macro") {
@@ -79,21 +85,14 @@ fn derive_js_macro_impl(input: DeriveInput) -> Result<TokenStream, TokenStream> 
     let macro_name = macro_name.as_deref().unwrap_or("js_macro");
     let macro_name_token = syn::Ident::new(&macro_name, Span::mixed_site());
 
-    let visibility = match input.vis {
-        syn::Visibility::Public(_) => "pub",
-        syn::Visibility::Crate(_) => "crate",
-        syn::Visibility::Restricted(_) => "restricted",
-        syn::Visibility::Inherited => "inherited",
-    };
+    let item_name = input.ident.to_string();
 
-    let ident = input.ident.to_string();
+    let json_value = rs_to_json::jsonify(input.clone());
 
-    // TODO: convert visibility, ident, and input.data to json and generate a JS program
-    // that stores it in a global variable. Then have a macro concat that with the JS code
-    // passed to #macro_name
-    // let (data_kind, data_value) = match input.data {};
-
-    let code = format!(r#"let struct_name = "{}";"#, ident);
+    let code = format!(
+        r#"Object.assign(this, {});"#,
+        serde_json::to_string(&json_value).unwrap()
+    );
     let code_token = syn::Lit::Str(syn::LitStr::new(&code, Span::call_site()));
 
     // let ident = syn::Ident::new("NAME", Span::call_site());
@@ -102,11 +101,11 @@ fn derive_js_macro_impl(input: DeriveInput) -> Result<TokenStream, TokenStream> 
     // });
     Ok(quote! {
         macro_rules! #macro_name_token {
-            ($js:literal) => {
+            ($( $js:tt )*) => {
                 ctjs_macros::eval!(
                     concat!(
                         #code_token,
-                        $js
+                        $($js)*
                     )
                 );
             };
