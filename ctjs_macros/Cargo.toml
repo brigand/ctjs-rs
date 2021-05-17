@@ -3,6 +3,8 @@ name = "ctjs_macros"
 version = "0.0.1"
 authors = ["Frankie Bagnardi <f.bagnardi@gmail.com>"]
 edition = "2018"
+description = "compile time javascript as a rust proc macro"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
