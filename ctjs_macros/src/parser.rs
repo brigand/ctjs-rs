@@ -78,11 +78,22 @@ enum Hint {
     None,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Kind {
+    Group,
+    Punct,
+    Ident,
+    Literal,
+    None,
+}
+
 // Based on https://github.com/fusion-engineering/inline-python/blob/7604f78b2c834f5f5ee77defecb5a1a8824fac9d/macros/src/embed_python.rs
 fn add(code: &mut String, input: TokenStream, hint: Hint) {
     let mut tokens = input.into_iter().peekable();
 
     let mut first = Some(());
+
+    let mut last = Kind::None;
 
     while let Some(token) = tokens.next() {
         let is_first = first.take().is_some() && code.is_empty();
@@ -143,9 +154,11 @@ fn add(code: &mut String, input: TokenStream, hint: Hint) {
                 code.write_str(start).unwrap();
                 add(code, inner.stream(), Hint::Tokens);
                 code.write_str(end).unwrap();
+                last = Kind::Group;
             }
             TokenTree::Punct(inner) => {
                 if inner.spacing() == Spacing::Alone
+                    && last != Kind::Punct
                     && !code.ends_with(" ")
                     && inner.as_char() != '('
                     && inner.as_char() != '>'
@@ -186,10 +199,12 @@ fn add(code: &mut String, input: TokenStream, hint: Hint) {
                         // Do nothing
                     } else if inner.as_char() == ')' {
                         code.push_str("\n");
-                    } else {
+                    } else if last != Kind::Punct {
                         code.push_str(" ");
                     }
                 }
+
+                last = Kind::Punct;
             }
             TokenTree::Ident(inner) => {
                 let suffix = match tokens.peek().and_then(as_punct) {
@@ -197,9 +212,13 @@ fn add(code: &mut String, input: TokenStream, hint: Hint) {
                     _ => " ",
                 };
                 write!(code, "{}{}", inner, suffix).unwrap();
+
+                last = Kind::Ident;
             }
             TokenTree::Literal(inner) => {
                 write!(code, "{}", inner).unwrap();
+
+                last = Kind::Literal;
             }
         }
     }
