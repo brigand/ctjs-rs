@@ -5,6 +5,8 @@ authors = ["Frankie Bagnardi <f.bagnardi@gmail.com>"]
 edition = "2018"
 description = "compile time javascript as a rust proc macro"
 license = "MIT"
+homepage = "https://github.com/brigand/ctjs-rs/blob/master/ctjs_macros"
+repository = "https://github.com/brigand/ctjs-rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
