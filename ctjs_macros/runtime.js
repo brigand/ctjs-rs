@@ -8,6 +8,9 @@
     float: (number) => to_floating(number, null),
     range: (start, end, step=1) => Array.from({length: (end - start) / step+1}, (_, i)=> start + i * step),
     json: (value) => `serde_json::json!(${JSON.stringify(value, null, 2)})`,
+    parse_attrs: (attrs, allow = null) => {
+      return parse_attrs(attrs || [], allow ? [].concat(allow) : null);
+    },
   });
 
   const raw_string = (text) => {
@@ -33,6 +36,64 @@
       ns += '_' + ty;
     }
     return ns;
+  };
+
+  const get = (initial, [...parts]) => {
+    let current = initial;
+
+    if (current == null) {
+      return undefined;
+    }
+
+    parts.every((part) => {
+      if (current != null) {
+        current = current[part];
+        return current != null;
+      }
+    });
+
+    return current;
+  };
+
+  const parse_attrs = (attrs, allow) => {
+    const kv = Object.create(null);
+
+    attrs.forEach(attr => {
+      const segments = get(attr, ['path', 'segments']); 
+      if (!segments || segments.length !== 1) {
+        return;
+      }
+
+      const ident = get(attr, ['path', 'segments', 0, 'ident']);
+      const match = allow ? allow.includes(ident) : true;
+      if (!ident || !match) {
+        return;
+      }
+
+      if (!attr.tokens) {
+        return;
+      }
+
+      const group = get(attr, ['tokens', 0, 'group']);
+
+      // match #[allowed_name(key = "value")
+      if (!group || group.delimiter !== 'parenthesis') {
+        return;
+      }
+
+
+      const key = get(group, ['stream', 0, 'ident']);
+      const punct = get(group, ['stream', 1, 'punct', 'op']);
+      const value = get(group, ['stream', 2, 'lit']);
+
+      if (punct !== '=') {
+        return;
+      }
+
+      kv[key] = value;
+    });
+
+    return kv;
   }
 
   this.ctjs = ctjs;

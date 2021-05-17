@@ -77,7 +77,10 @@ fn example_test() {
     #[js_macro = "example"]
     enum TestStruct {
         Foo(String),
-        Bar { something: &'static str },
+        #[js_macro(example = "val")]
+        Bar {
+            something: &'static str,
+        },
     }
 
     example! { js!("static NAME: &str = " + ctjs.str(name) + ";") }
