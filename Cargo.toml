@@ -13,4 +13,4 @@ repository = "https://github.com/brigand/ctjs-rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ctjs_macros = { path = "./ctjs_macros", version = "0.0.1" }
+ctjs_macros = { path = "./ctjs_macros", version = "=0.0.1" }
