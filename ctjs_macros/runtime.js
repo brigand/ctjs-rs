@@ -18,7 +18,7 @@
     let hash = '#'.repeat(hash_count);
 
     if (raw) {
-      return `r${hash}"${text}${hash}"`
+      return `r${hash}"${text}"${hash}`
     } else {
       return `"${text}"`;
     }

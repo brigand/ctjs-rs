@@ -5,6 +5,8 @@ use serde_json::Value;
 use syn::DeriveInput;
 use syn_serde::Syn;
 
+pub mod adapter;
+
 pub fn jsonify(input: DeriveInput) -> Value {
     let visibility = match input.vis {
         syn::Visibility::Public(_) => "pub",

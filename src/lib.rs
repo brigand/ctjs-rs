@@ -75,11 +75,13 @@ mod tests {
 fn example_test() {
     #[derive(Debug, JsMacro)]
     #[js_macro = "example"]
-    struct TestStruct {
-        pub s: String,
+    enum TestStruct {
+        Foo(String),
+        Bar { something: &'static str },
     }
 
     example! { js!("static NAME: &str = " + ctjs.str(name) + ";") }
+    example! { js!("static JSON: &str = " + ctjs.str(ctjs.json(item)) + ";" ) }
 
     // assert_eq!(NAME, "TestStruct");
 }

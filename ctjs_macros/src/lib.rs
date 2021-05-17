@@ -1,7 +1,7 @@
 extern crate proc_macro;
 
+mod jsonify;
 mod parser;
-mod rs_to_json;
 
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Span, TokenStream};
@@ -42,7 +42,7 @@ fn eval_impl(input: TokenStream) -> Result<TokenStream, TokenStream> {
         JsValue::String(rust_code) => {
             match TokenStream::from_str(&rust_code) {
                 Ok(ts) => Ok(ts),
-                Err(err) => panic!("Expected this string to be valid when interpreted as a TokenStream: {:?}\nParse error: {:?}", rust_code, err)
+                Err(err) => panic!("Expected this string to be valid when interpreted as a TokenStream: \n{}\nParse error: {:?}", rust_code, err)
             }
         }
         JsValue::Array(_) => {
@@ -87,7 +87,7 @@ fn derive_js_macro_impl(input: DeriveInput) -> Result<TokenStream, TokenStream> 
 
     let item_name = input.ident.to_string();
 
-    let json_value = rs_to_json::jsonify(input.clone());
+    let json_value = jsonify::jsonify(input.clone());
 
     let code = format!(
         r#"Object.assign(this, {});"#,
