@@ -122,7 +122,7 @@ pub fn eval(input: TokenStream1) -> TokenStream1 {
     })
 }
 
-#[proc_macro_derive(JsMacro, attributes(js_macro))]
+#[proc_macro_derive(JsMacro, attributes(js_macro, js))]
 pub fn derive_js_macro(input: TokenStream1) -> TokenStream1 {
     let input = parse_macro_input!(input as DeriveInput);
 

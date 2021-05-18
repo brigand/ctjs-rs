@@ -6,6 +6,8 @@
 
 # ctjs
 
+Execute JavaScript at compile time to generate Rust code. Both evaluating expressions and
+custom derives are supported.
 
 ### eval
 
@@ -13,9 +15,13 @@
 use ctjs::eval;
 
 const X: f64 = eval! {
+  // This is JavaScript
   const x = 5;
   String(x * Math.PI)
 };
+
+assert!(X > 15.0);
+assert!(X < 16.0);
 ```
 
 ### Custom Derive
@@ -26,7 +32,7 @@ use ctjs::JsMacro;
 #[derive(Debug, JsMacro)]
 #[js_macro = "fruit_derive"]
 enum Fruit {
-    #[js_macro(name = "granny smith")]
+    #[js(name = "granny smith")]
     Apple,
     Orange,
     Pear,
@@ -56,11 +62,14 @@ fruit_derive! {
     )
 }
 
-fn main() {
-    for fruit in vec![Fruit::Apple, Fruit::Orange, Fruit::Pear] {
-        println!("Debug: {:?}, Display: {}", fruit, fruit);
-    }
+let fruits = vec![Fruit::Apple, Fruit::Orange, Fruit::Pear];
+for fruit in &fruits {
+    println!("Debug: {:?}, Display: {}", fruit, fruit);
 }
+
+assert_eq!(&fruits[0].to_string(), "granny smith");
+assert_eq!(&fruits[1].to_string(), "orange");
+assert_eq!(&fruits[2].to_string(), "pear");
 ```
 
 Current version: 0.0.1

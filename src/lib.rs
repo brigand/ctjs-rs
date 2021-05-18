@@ -1,3 +1,5 @@
+//! Execute JavaScript at compile time to generate Rust code. Both evaluating expressions and
+//! custom derives are supported.
 //!
 //! ## eval
 //!
@@ -5,9 +7,13 @@
 //! use ctjs::eval;
 //!
 //! const X: f64 = eval! {
+//!   // This is JavaScript
 //!   const x = 5;
 //!   String(x * Math.PI)
 //! };
+//!
+//! assert!(X > 15.0);
+//! assert!(X < 16.0);
 //! ```
 //!
 //! ## Custom Derive
@@ -18,7 +24,7 @@
 //! #[derive(Debug, JsMacro)]
 //! #[js_macro = "fruit_derive"]
 //! enum Fruit {
-//!     #[js_macro(name = "granny smith")]
+//!     #[js(name = "granny smith")]
 //!     Apple,
 //!     Orange,
 //!     Pear,
@@ -48,11 +54,14 @@
 //!     )
 //! }
 //!
-//! fn main() {
-//!     for fruit in vec![Fruit::Apple, Fruit::Orange, Fruit::Pear] {
-//!         println!("Debug: {:?}, Display: {}", fruit, fruit);
-//!     }
+//! let fruits = vec![Fruit::Apple, Fruit::Orange, Fruit::Pear];
+//! for fruit in &fruits {
+//!     println!("Debug: {:?}, Display: {}", fruit, fruit);
 //! }
+//!
+//! assert_eq!(&fruits[0].to_string(), "granny smith");
+//! assert_eq!(&fruits[1].to_string(), "orange");
+//! assert_eq!(&fruits[2].to_string(), "pear");
 //! ```
 pub use ctjs_macros::*;
 
@@ -76,31 +85,33 @@ mod tests {
             const values = Array.from({ length: 30 }, (x, i) => Math.sin(i / (Math.PI * 2)));
             "vec![" + values.map(value => value % 1 === 0 ? value + ".0" : value) + "]"
         };
-        println!("Nums: {:#?}", nums);
 
-        assert_eq!("making test fail to see stdout", "");
+        assert_eq!(nums.len(), 30);
     }
 
     #[test]
-    fn it_can_generate_sin_table_helpers() {
+    fn it_can_generate_sin_table_with_helpers() {
         let nums: Vec<f64> = eval! {
             const values = ctjs.range(0, 30).map(x => Math.sin(x / (Math.PI * 2)));
             ctjs.vec(values.map(ctjs.float))
         };
-        println!("Nums: {:#?}", nums);
 
-        assert_eq!("making test fail to see stdout", "");
+        assert_eq!(nums.len(), 30);
+
+        // println!("Nums: {:#?}", nums);
+        // assert_eq!("making test fail to see stdout", "");
     }
 
     #[test]
-    fn it_can_generate_sin_table_raw_string() {
+    fn it_can_generate_sin_table_with_raw_string() {
         let nums: Vec<f64> = eval! {r#"
             const values = Array.from({ length: 30 }, (x, i) => Math.sin(i / (Math.PI * 2)));
             `vec![${values.map(value => value % 1 === 0 ? value + ".0" : value)}]`
         "#};
-        println!("Nums: {:#?}", nums);
 
-        assert_eq!("making test fail to see stdout", "");
+        assert_eq!(nums.len(), 30);
+        // println!("Nums: {:#?}", nums);
+        // assert_eq!("making test fail to see stdout", "");
     }
 
     #[test]
@@ -128,19 +139,19 @@ mod tests {
     }
 }
 
-fn example_test() {
-    #[derive(Debug, JsMacro)]
-    #[js_macro = "example"]
-    enum TestStruct {
-        Foo(String),
-        #[js_macro(example = "val")]
-        Bar {
-            something: &'static str,
-        },
-    }
+// fn example_test() {
+//     #[derive(Debug, JsMacro)]
+//     #[js_macro = "example"]
+//     enum TestStruct {
+//         Foo(String),
+//         #[js_macro(example = "val")]
+//         Bar {
+//             something: &'static str,
+//         },
+//     }
 
-    example! { js!("static NAME: &str = " + ctjs.str(name) + ";") }
-    example! { js!("static JSON: &str = " + ctjs.str(ctjs.json(item)) + ";" ) }
+//     example! { js!("static NAME: &str = " + ctjs.str(name) + ";") }
+//     example! { js!("static JSON: &str = " + ctjs.str(ctjs.json(item)) + ";" ) }
 
-    // assert_eq!(NAME, "TestStruct");
-}
+//     // assert_eq!(NAME, "TestStruct");
+// }
