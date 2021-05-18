@@ -1,4 +1,13 @@
-## eval
+<!-- {\{badges}} -->
+<!--
+  README generated with https://github.com/livioribeiro/cargo-readme
+  $ cargo readme > README.md
+-->
+
+# ctjs
+
+
+### eval
 
 ```rust
 use ctjs::eval;
@@ -9,7 +18,7 @@ const X: f64 = eval! {
 };
 ```
 
-## Custom Derive
+### Custom Derive
 
 ```rust
 use ctjs::JsMacro;
@@ -54,8 +63,12 @@ fn main() {
 }
 ```
 
+Current version: 0.0.1
+
 ## Prior Work
 
 - https://github.com/fusion-engineering/inline-python
     - https://docs.rs/ct-python/0.5.1/ct_python/
 - https://docs.rs/embed_js/0.1.4/embed_js/
+
+All code licensed as MIT
