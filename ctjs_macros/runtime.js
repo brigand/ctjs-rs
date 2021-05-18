@@ -6,7 +6,7 @@
     f32: (number) => to_floating(number, 'f32'),
     f64: (number) => to_floating(number, 'f64'),
     float: (number) => to_floating(number, null),
-    range: (start, end, step=1) => Array.from({length: (end - start) / step+1}, (_, i)=> start + i * step),
+    range: (start, end, step=1) => Array.from({length: (end - start) / step}, (_, i)=> start + i * step),
     json: (value) => `serde_json::json!(${JSON.stringify(value, null, 2)})`,
     parse_attrs: (attrs, allow = null) => {
       return parse_attrs(attrs || [], allow ? [].concat(allow) : null);
