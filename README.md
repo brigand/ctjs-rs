@@ -72,7 +72,7 @@ assert_eq!(&fruits[1].to_string(), "orange");
 assert_eq!(&fruits[2].to_string(), "pear");
 ```
 
-Current version: 0.0.1
+Current version: 0.0.2
 
 ## Prior Work
 
